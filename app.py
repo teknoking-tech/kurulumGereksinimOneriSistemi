@@ -6,6 +6,8 @@ import streamlit as st
 import base64
 import os
 from datetime import datetime
+import json
+
 
 # Uygulama modülleri
 from config import DEFAULT_FORM_VALUES, STYLES, calculate_requirements
