@@ -18,14 +18,7 @@ from utils import (
 )
 from document_generator import generate_document, generate_markdown_content
 
-# Uygulama modülleri
-from config import DEFAULT_FORM_VALUES, STYLES, calculate_requirements
-from utils import (
-    get_environment_label, get_deployment_label, get_service_label,
-    calculate_total_hardware, format_file_name, get_binary_file_downloader_html,
-    streamlit_header, streamlit_footer
-)
-from document_generator import generate_document, generate_markdown_content
+
 from chat_bot import render_chat_interface  # Yeni eklenen satır
 from admin import admin_panel  # Admin paneli içe aktar
 # Cache mekanizmasını kullanarak, performansı iyileştirme
@@ -712,16 +705,6 @@ def render_step_four():
         Seçimlerinize göre hazırlanan kurulum gereksinimleri dokümanı oluşturuldu. 
         Dokümanı PDF, Word veya Markdown formatında indirebilirsiniz.
         """)
-    st.markdown('<div class="step-title">4. Gereksinim Dokümanı</div>', unsafe_allow_html=True)
-    
-    st.markdown(
-        """
-        ### Kurulum Gereksinimleri Dokümanı
-        
-        Seçimlerinize göre hazırlanan kurulum gereksinimleri dokümanı oluşturuldu. 
-        Dokümanı PDF, Word veya Markdown formatında indirebilirsiniz.
-        """
-    )
     
     # İndirme butonları
     col1, col2, col3 = st.columns(3)
@@ -759,7 +742,17 @@ def render_step_four():
         st.success("✅ Doküman başarıyla oluşturuldu ve indirme başlatıldı.")
 
 # Ana uygulama akışı
+# Ana uygulama akışı
 def main():
+    # Admin panelini göster (eğer aktifse)
+    if 'show_admin' not in st.session_state:
+        st.session_state.show_admin = False
+
+    if st.session_state.show_admin:
+        admin_panel()
+        # Normal uygulama akışını durdur
+        st.stop()
+        
     # Uygulamayı başlat
     # İlerleme çubuğu
     progress_text = f"Adım {st.session_state.current_step} / 4"
@@ -775,26 +768,19 @@ def main():
             st.success("Kurulum Asistanı etkin")
         else:
             st.info("Yardıma ihtiyacınız olursa, kurulum asistanını etkinleştirin")
+        
+        # Admin Paneli Erişimi
+        st.markdown("---")
+        st.markdown("### Admin")
+        if st.sidebar.button("🔐 Admin Paneli"):
+            st.session_state.show_admin = True
+            st.rerun()
     
     # Chat bot açıksa göster
     if st.session_state.show_chatbot:
         with st.expander("CBOT Kurulum Asistanı", expanded=True):
             render_chat_interface(st.session_state.form_data)
-
-    # Admin panelini göster (eğer aktifse)
-if 'show_admin' not in st.session_state:
-    st.session_state.show_admin = False
-
-if st.session_state.show_admin:
-    admin_panel()
-    # Normal uygulama akışını durdur
-    st.stop()
-    # Admin Paneli Erişimi
-    st.markdown("---")
-    st.markdown("### Admin")
-    if st.sidebar.button("🔐 Admin Paneli"):
-        st.session_state.show_admin = True
-        st.rerun()
+    
     st.markdown(
         f"""
         <div style="
@@ -823,8 +809,6 @@ if st.session_state.show_admin:
         """,
         unsafe_allow_html=True
     )
-    
-    # İçerik konteynerı ve geri kalan kod aynı kalıyor...
     
     # İçerik konteynerı
     st.markdown('<div class="step-container">', unsafe_allow_html=True)

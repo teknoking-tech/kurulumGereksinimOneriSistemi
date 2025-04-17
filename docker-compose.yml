@@ -8,6 +8,9 @@ services:
     ports:
       - "8501:8501"
     volumes:
-      - ./data:/app/data
+      - cbot-data:/app/data
     restart: always
     container_name: cbot-kurulum-asistani
+
+volumes:
+  cbot-data:
