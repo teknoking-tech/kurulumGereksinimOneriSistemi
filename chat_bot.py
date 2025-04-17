@@ -54,7 +54,20 @@ def send_message_to_n8n(message, form_data=None):
         
         # Yanıtı kontrol et
         if response.status_code == 200:
-            return response.json().get("response", "Bir hata oluştu, yanıt alınamadı.")
+            # Webhook yanıtı bir dizi içinde nesne olarak geliyor, ilk öğeyi al
+            response_data = response.json()
+            
+            # Yanıt dizi ise ve içinde veri varsa
+            if isinstance(response_data, list) and len(response_data) > 0:
+                # İlk öğeden output alanını çıkar
+                if "output" in response_data[0]:
+                    return response_data[0]["output"]
+            
+            # Eğer "response" anahtarı varsa, onu döndür
+            elif isinstance(response_data, dict) and "response" in response_data:
+                return response_data["response"]
+                
+            return "Bir hata oluştu, yanıt alınamadı."
         else:
             return f"Sunucu hatası: HTTP {response.status_code}"
     
