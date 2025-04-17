@@ -25,7 +25,7 @@ from utils import (
 )
 from document_generator import generate_document, generate_markdown_content
 from chat_bot import render_chat_interface  # Yeni eklenen satır
-
+from admin import admin_panel  # Admin paneli içe aktar
 # Cache mekanizmasını kullanarak, performansı iyileştirme
 @st.cache_data(ttl=600)
 def get_cached_requirements(form_data_str):
@@ -678,6 +678,40 @@ def render_other_tab():
 def render_step_four():
     st.markdown('<div class="step-title">4. Gereksinim Dokümanı</div>', unsafe_allow_html=True)
     
+    # Yeni: Konfigürasyon kaydetme butonu
+    col1, col2 = st.columns([3, 1])
+    with col2:
+        if st.button("Bu Yapılandırmayı Kaydet"):
+            # Form verilerini kopyala ve oluşturulma tarihini ekle
+            config_to_save = st.session_state.form_data.copy()
+            config_to_save["created_at"] = datetime.now().strftime("%d.%m.%Y %H:%M")
+            
+            # saved_configs oluştur (eğer yoksa)
+            if 'saved_configs' not in st.session_state:
+                st.session_state.saved_configs = []
+            
+            # Yapılandırmayı kaydet
+            st.session_state.saved_configs.append(config_to_save)
+            
+            # data dizini kontrolü
+            if not os.path.exists("data"):
+                os.makedirs("data")
+            
+            # Dosyaya kaydet
+            with open("data/configs.json", "w") as f:
+                json.dump(st.session_state.saved_configs, f, indent=4)
+            
+            st.success("Yapılandırma başarıyla kaydedildi! Admin panelinden görüntüleyebilirsiniz.")
+    
+    with col1:
+        st.markdown("""
+        ### Kurulum Gereksinimleri Dokümanı
+        
+        Seçimlerinize göre hazırlanan kurulum gereksinimleri dokümanı oluşturuldu. 
+        Dokümanı PDF, Word veya Markdown formatında indirebilirsiniz.
+        """)
+    st.markdown('<div class="step-title">4. Gereksinim Dokümanı</div>', unsafe_allow_html=True)
+    
     st.markdown(
         """
         ### Kurulum Gereksinimleri Dokümanı
@@ -744,7 +778,21 @@ def main():
     if st.session_state.show_chatbot:
         with st.expander("CBOT Kurulum Asistanı", expanded=True):
             render_chat_interface(st.session_state.form_data)
-    
+
+    # Admin panelini göster (eğer aktifse)
+if 'show_admin' not in st.session_state:
+    st.session_state.show_admin = False
+
+if st.session_state.show_admin:
+    admin_panel()
+    # Normal uygulama akışını durdur
+    st.stop()
+    # Admin Paneli Erişimi
+    st.markdown("---")
+    st.markdown("### Admin")
+    if st.sidebar.button("🔐 Admin Paneli"):
+        st.session_state.show_admin = True
+        st.rerun()
     st.markdown(
         f"""
         <div style="
